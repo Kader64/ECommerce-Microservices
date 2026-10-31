@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/infra/">
+    <File Path="init-databases.sql" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".env" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="ApiGateway/ApiGateway.csproj" />
+    <Project Path="Catalog.Api/Catalog.Api.csproj" />
+    <Project Path="Identity.Api/Identity.Api.csproj" />
+    <Project Path="Orders.Api/Orders.Api.csproj" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>
