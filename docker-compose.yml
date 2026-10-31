@@ -1,78 +1,57 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: postgres
+    image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecretPassword123!}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./infra/init-databases.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d postgres"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 10
-    networks:
-      - backend
+      start_period: 10s
 
   identity.api:
     image: ${DOCKER_REGISTRY-}identityapi
     build:
       context: .
       dockerfile: Identity.Api/Dockerfile
-    environment:
-      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=identitydb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-SecretPassword123!}
-      - Jwt__Key=${JWT_KEY}
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - backend
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
       context: .
       dockerfile: Catalog.Api/Dockerfile
-    environment:
-      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=catalogdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-SecretPassword123!}
-      - Internal__ApiKey=${INTERNAL_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - backend
 
   orders.api:
     image: ${DOCKER_REGISTRY-}ordersapi
     build:
       context: .
       dockerfile: Orders.Api/Dockerfile
-    environment:
-      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=ordersdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-SecretPassword123!}
-      - Internal__ApiKey=${INTERNAL_API_KEY}
-      - Services__Catalog=http://catalog.api:8080/
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - backend
+      catalog.api:
+        condition: service_started
 
   apigateway:
     image: ${DOCKER_REGISTRY-}apigateway
     build:
       context: .
       dockerfile: ApiGateway/Dockerfile
-    ports:
-      - "8000:8080"
-    networks:
-      - backend
-
-networks:
-  backend:
+    depends_on:
+      - identity.api
+      - catalog.api
+      - orders.api
 
 volumes:
-  pgdata:
+  postgres_data:

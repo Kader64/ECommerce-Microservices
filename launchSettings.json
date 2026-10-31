@@ -4,10 +4,10 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "orders.api": "StartDebugging",
-        "identity.api": "StartDebugging",
+        "apigateway": "StartDebugging",
         "catalog.api": "StartDebugging",
-        "apigateway": "StartDebugging"
+        "identity.api": "StartDebugging",
+        "orders.api": "StartDebugging"
       }
     }
   }
