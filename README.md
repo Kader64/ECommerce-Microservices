@@ -1,2 +1,2 @@
 # ECommerce-Microservices
-WIP
+WIP (Work in progress)
